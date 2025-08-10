@@ -1,42 +1,20 @@
-import array
 from machine import Pin, SPI, PWM
 import framebuf
-import time
 import rp2
-from .util import debug
 import micropython
 micropython.alloc_emergency_exception_buf(100)
-
-class FramebufferWrapper(framebuf.FrameBuffer):
-    def __init__(self, buffer: bytearray | array | memoryview[int] | framebuf.Any, width: int, height: int) -> None: # type: ignore
-        super().__init__(buffer, width, height, framebuf.RGB565)
-        self.buffer=buffer
-        self.x=0
-        self.y=0
-
+import time
+from MicroGame.util import rgb
 DC = 8
 CS = 9
 SCK = 10
 MOSI = 11
 RST = 12
 BL = 13
-SPI1_BASE = 0x40042000
-SPI1_DR = SPI1_BASE + 0x18
+SPI1_BASE = 0x40088000
+SPI1_DR = SPI1_BASE + 0x008
 DREQ_SPI1_TX = 40
 class PartialFramebufferDriver:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-    
     def __init__(self, width=240, height=300):
         self.width = width
         self.height = height
@@ -45,7 +23,7 @@ class PartialFramebufferDriver:
         self.rst = Pin(RST, Pin.OUT)
 
         self.cs(1)
-        self.spi = SPI(1, 20_000_000, polarity=0, phase=0, sck=Pin(SCK), mosi=Pin(MOSI))
+        self.spi = SPI(1, 40_000_000, polarity=0, phase=0, sck=Pin(SCK), mosi=Pin(MOSI))
         self.dc = Pin(DC, Pin.OUT)
         self.dc(1)
         # Initialize display hardware
@@ -55,21 +33,21 @@ class PartialFramebufferDriver:
         self.pwm.duty_u16(65535) 
 
         self.dma = None
-
+    
     def write_cmd(self, cmd):
         self.cs(1)
         self.dc(0)
         self.cs(0)
         self.spi.write(bytearray([cmd]))
         self.cs(1)
-
+    
     def write_data(self, data):
         self.cs(1)
         self.dc(1)
         self.cs(0)
         self.spi.write(bytearray([data]) if isinstance(data, int) else data)
         self.cs(1)
-
+    
     def set_window(self, x, y, w, h):
         # Set column address
         self.write_cmd(0x2A)
@@ -88,7 +66,7 @@ class PartialFramebufferDriver:
         if self.dma.active():
             return True
         return False
-    
+
     def dma_send_color_data(self,buf):
         self.cs(1)
         self.dc(1)
@@ -106,7 +84,7 @@ class PartialFramebufferDriver:
         
         # Pack the control register:
         ctrl = self.dma.pack_ctrl(
-            size=1,           # half-word (16-bit) transfers
+            size=0,           # half-word (16-bit) transfers
             inc_read=True,    # increment source buffer pointer
             inc_write=False,  # write pointer fixed (SPI DR)
             treq_sel=DREQ_SPI1_TX,
@@ -114,7 +92,8 @@ class PartialFramebufferDriver:
             high_pri=True
         )
         # count is number of 16-bit transfers (not bytes)
-        count = len(buf) // 2
+        count = len(buf)
+        print(f"Count: {count}")
         self.dma.irq(handler=self.dma_done_handler)
         # Start DMA
         
@@ -124,30 +103,27 @@ class PartialFramebufferDriver:
         while self.dma.active():
             pass
         print("Dma active after completion",self.dma.active())
-        
-
+    
     def dma_done_handler(self,dma_channel):
-        self.dma.active(0)
         self.cs(1)
-        self.dma.iqr(handler=None)
-
-
+        self.dma.irq(handler=None)
+    
     def send_color_data(self, data):
         self.cs(1)
         self.dc(1)
         self.cs(0)
         self.spi.write(bytearray([data]) if isinstance(data, int) else data)
         self.cs(1)
-
+    
     def set_bl_pwm(self, duty):
         self.pwm.duty_u16(duty)
 
     def create_framebuffer(self, w, h):
         # Create a new frame buffer for a partial region
         buf = bytearray(w * h * 2)  # 2 bytes per pixel RGB565
-        fb = FramebufferWrapper(buf, w, h)
-        return fb
-
+        fb = framebuf.FrameBuffer(buf, w, h,framebuf.RGB565)
+        return fb,buf
+    
     def show_region(self, x, y, w, h, buf):
         # Push the framebuffer region to the display at (x, y)
         self.set_window(x, y, w, h)
@@ -329,4 +305,10 @@ class PartialFramebufferDriver:
         self.write_cmd(0x29)
         time.sleep(0.01)
 
-SingleFrameBufferDriver=PartialFramebufferDriver()
+
+driver=PartialFramebufferDriver()
+
+fb,buf=driver.create_framebuffer(1,1)
+fb.fill(rgb(255,0,0))
+
+driver.show_region(30,30,1,1,buf)

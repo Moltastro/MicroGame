@@ -1,5 +1,6 @@
-from .framebuffer import SingleFrameBufferDriver
+from .framebuffer import SingleFrameBufferDriver,FramebufferWrapper
 from .util import *
+from collections import deque
 class ViewPort:
     _instance = None
 
@@ -14,16 +15,17 @@ class ViewPort:
             cls._instance = cls(0,0,240,300,30)
         return cls._instance
     
-    def __init__(self, x, y, width, height, tile_size=None,tiles_x=None,tiles_y=None,tile_size_x=None,tile_size_y=None):
+    def __init__(self, x, y, width, height, am_buffer_tiles=1, tile_size=None,tiles_x=None,tiles_y=None,tile_size_x=None,tile_size_y=None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+
         if tile_size!=None:
             self.tile_size_x = tile_size
             self.tile_size_y = tile_size
-            self.tiles_x=width//tile_size
-            self.tiles_y=height//tile_size
+            self.tiles_x=width // tile_size
+            self.tiles_y=height // tile_size
         elif tiles_x!=None and tiles_y:
             self.tiles_x=tiles_x
             self.tiles_y=tiles_y
@@ -32,14 +34,25 @@ class ViewPort:
         elif tile_size_x!=None and tile_size_y!=None:
             self.tile_size_x=tile_size_x
             self.tile_size_y=tile_size_y
-            self.tiles_x=width//tile_size_x
-            self.tiles_y=height//tile_size_y
+            self.tiles_x=width // tile_size_x
+            self.tiles_y=height // tile_size_y
+        
+        print(f"tile_size: {self.tile_size_x,self.tile_size_y},tile am: {self.tiles_x,self.tiles_y}")
         #Holds all sprites for every tile
         self.tile_sprite_sets = [set() for _ in range(self.tiles_x * self.tiles_y)]
         # Uses tile coordinates to track dirty tiles which need changing
         self.dirty_tiles = set()
         # The framebuffer which is used to draw to the screen
-        self.drawing_framebuffer,self.byteArray=SingleFrameBufferDriver.create_framebuffer(self.tile_size_x,self.tile_size_y)
+        print("Creating")
+        self.available_framebuffers=deque([],am_buffer_tiles)
+        print("Has created")
+        self.queued_framebuffers=deque([],am_buffer_tiles-1)
+        self.am_buffer_tiles=am_buffer_tiles
+        for _ in range(self.am_buffer_tiles):
+            framebuffer=SingleFrameBufferDriver.create_framebuffer(int(self.tile_size_x),int(self.tile_size_y))
+            self.available_framebuffers.append(framebuffer)
+        print(f"len framewrapper {len(self.available_framebuffers)}")
+        
         self.draw_entire_screen()
     
     def world_to_screen(self, world_x, world_y):
@@ -124,19 +137,38 @@ class ViewPort:
         #Loop through all dirty tiles and redraw them, then push them to the screen
         for dirty_tile_coord in self.dirty_tiles:
             debug(f"Drawing to tile coord {dirty_tile_coord}")
-            
-            self.draw_tile(*dirty_tile_coord)
-            
+            #Draw tile
+            fb = self.draw_tile(*dirty_tile_coord)
+            #If queue is not full pass this statement
+            if len(self.queued_framebuffers) > self.am_buffer_tiles - 1 or not SingleFrameBufferDriver.dma_busy():
+                #Dma is ready for more, set new current and add the old to available framebuffers to draw to
+                self.send_next_in_queue()
+
+            self.queued_framebuffers.append(fb)
+
+        #If there are queued framebuffers waiting to be sent go through all of them
+        while len(self.queued_framebuffers):
+            self.send_next_in_queue()
+
         self.dirty_tiles.clear()
+
+    def send_next_in_queue(self):
+        fb:FramebufferWrapper=self.queued_framebuffers.popleft()
+        SingleFrameBufferDriver.show_region(fb.x,fb.y,self.tile_size_x,self.tile_size_y,fb.buffer)
+        self.available_framebuffers.append(fb)
+        
     def draw_tile(self,tx,ty):
-        self.drawing_framebuffer.fill(rgb(0,0,0))
+        framebuffer:FramebufferWrapper=self.available_framebuffers.popleft()
+        framebuffer.fill(rgb(0,0,0))
         #Get the set with sprites within this tile
         sprite_set:set=self.tile_sprite_sets[self.tile_coordinates_to_tile_index(tx,ty)]
         drawable:"Drawable"
         x0,y0=self.tile_coords_to_screen_coordinates(tx,ty)
         for drawable in sorted(sprite_set, key=lambda sprite:sprite.z,reverse=True):
-            drawable.draw_into(self.drawing_framebuffer, *drawable.framebuffer_relative_coordinates(x0,y0))
+            drawable.draw_into(framebuffer, *drawable.framebuffer_relative_coordinates(x0,y0))
         #Set the window to focus the tile
+        framebuffer.x,framebuffer.y=x0,y0
+        return framebuffer
         SingleFrameBufferDriver.set_window(x0,y0,self.tile_size_x,self.tile_size_y)
         #Send the bytearray contained within the framebuf
         SingleFrameBufferDriver.send_color_data(self.byteArray)
@@ -144,6 +176,8 @@ class ViewPort:
     def draw_entire_screen(self):
         for tx in range(self.tiles_x):
             for ty in range(self.tiles_y):
-                self.draw_tile(tx,ty)
+                fb=self.draw_tile(tx,ty)
+                SingleFrameBufferDriver.spi_show_region(*self.tile_coords_to_screen_coordinates(tx,ty),self.tile_size_x,self.tile_size_y,fb)
+                self.available_framebuffers.append(fb)
 
 singleViewPort=ViewPort(0,0,240,300,tiles_x=1,tiles_y=15)

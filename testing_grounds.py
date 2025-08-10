@@ -3,10 +3,11 @@ from MicroGame.drawable import *
 from MicroGame.gameObject import *
 from MicroGame.viewportTileHandler import SingleFrameBufferDriver
 from picozero import Pot
-from time import sleep
+from time import sleep,sleep_ms
 from random import randint
+from rp2 import DMA
 import gc
-def available_ram():
+""" def available_ram():
     gc.collect()  # Run garbage collection to free unused memory
     free_bytes = gc.mem_free()
     allocated_bytes = gc.mem_alloc()
@@ -32,3 +33,9 @@ while True:
     game.run()
     rect.y=int(pot.value*300)
     available_ram()
+ """
+fb=SingleFrameBufferDriver.create_framebuffer(30,30)
+fb.fill(rgb(0,255,0))
+SingleFrameBufferDriver.spi_show_region(100,100,30,30,fb.buffer)
+sleep_ms(1)
+SingleFrameBufferDriver.show_region(50,50,30,30,fb.buffer)

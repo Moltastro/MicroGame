@@ -154,6 +154,7 @@ class BigSprite(Drawable):
     def __init__(self, x, y, w, h, src, z=0):
         super().__init__(x, y, w, h, z)
         self.src=src
+    @staticmethod
     def draw_bmp_section_to_fb_be(
     path: str,
     fb: bytearray,
