@@ -1,6 +1,7 @@
 from machine import Pin, SPI, PWM
 import framebuf
 import time
+from .util import debug
 
 DC = 8
 CS = 9
@@ -29,16 +30,16 @@ class PartialFramebufferDriver:
 
         self.cs = Pin(CS, Pin.OUT)
         self.rst = Pin(RST, Pin.OUT)
+
+        self.cs(1)
+        self.spi = SPI(1, 20_000_000, polarity=0, phase=0, sck=Pin(SCK), mosi=Pin(MOSI))
         self.dc = Pin(DC, Pin.OUT)
-
-        self.spi = SPI(1, 40_000_000, polarity=0, phase=0, sck=Pin(SCK), mosi=Pin(MOSI))
-
-        # Initialize backlight PWM
-        self.pwm = PWM(Pin(BL))
-        self.pwm.freq(5000)
-
+        self.dc(1)
         # Initialize display hardware
         self.init_display()
+        self.pwm = PWM(Pin(BL))
+        self.pwm.freq(5000)
+        self.pwm.duty_u16(65535) 
 
     def write_cmd(self, cmd):
         self.cs(1)
@@ -67,11 +68,10 @@ class PartialFramebufferDriver:
         self.write_cmd(0x2C)
 
     def send_color_data(self, data):
-        print("Sending color data")
         self.cs(1)
         self.dc(1)
         self.cs(0)
-        self.spi.write(data)
+        self.spi.write(bytearray([data]) if isinstance(data, int) else data)
         self.cs(1)
 
     def set_bl_pwm(self, duty):
@@ -259,3 +259,5 @@ class PartialFramebufferDriver:
         time.sleep(0.2)
         self.write_cmd(0x29)
         time.sleep(0.01)
+
+SingleFrameBufferDriver=PartialFramebufferDriver()

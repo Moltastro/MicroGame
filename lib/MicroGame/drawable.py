@@ -1,6 +1,6 @@
-from viewportTileHandler import *
+from .viewportTileHandler import singleViewPort
 import framebuf
-from util import *
+from .util import *
 class Drawable:
     def __init__(self, x, y, w, h, z=0):
         self._x = x
@@ -60,7 +60,7 @@ class Drawable:
     
     def update(self):
         if self.has_moved:
-            view=Viewport.get_instance()
+            view=singleViewPort.get_instance()
             if (self.old_top_left and self.old_bottom_right):
                 view.remove_drawable_in_tiles_and_mark_dirty(self)
             
