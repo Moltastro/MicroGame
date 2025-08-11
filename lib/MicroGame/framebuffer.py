@@ -2,7 +2,12 @@ from machine import Pin, SPI, PWM
 import framebuf
 import time
 from .util import debug
+import math
 
+class FramebufferWrapper(framebuf.FrameBuffer):
+    def __init__(self, buffer: bytearray, width: int, height: int) -> None:
+        super().__init__(buffer, width, height, framebuf.RGB565)
+        self.buffer=buffer
 DC = 8
 CS = 9
 SCK = 10
@@ -80,8 +85,8 @@ class PartialFramebufferDriver:
     def create_framebuffer(self, w, h):
         # Create a new frame buffer for a partial region
         buf = bytearray(w * h * 2)  # 2 bytes per pixel RGB565
-        fb = framebuf.FrameBuffer(buf, w, h, framebuf.RGB565)
-        return fb, buf
+        fb = FramebufferWrapper(buf, w, h)
+        return fb
 
     def show_region(self, x, y, w, h, buf):
         # Push the framebuffer region to the display at (x, y)

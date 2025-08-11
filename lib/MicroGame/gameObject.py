@@ -1,6 +1,7 @@
 from .drawable import Drawable
 from .viewportTileHandler import *
 from .gameHandler import GameHandler
+import math
 if __name__ == "__main__":
     from typing import Callable
 
@@ -45,11 +46,18 @@ class GameObject():
     @y.setter
     def y(self, value):
         self.sprite.y = value
-    def is_colliding(self,gameObject):
+
+    def is_colliding_with(self,gameObject):
         return (self.x < gameObject.x + gameObject.sprite.w and
     self.x + self.sprite.w > gameObject.x and
     self.y < gameObject.y + gameObject.sprite.h and
     self.y + self.sprite.h > gameObject.y)
+
+    def distance_to_object(self,gameObject):
+        return self.distance_to_coordinate(gameObject.x,gameObject.y)
+    
+    def distance_to_coordinate(self,x,y):
+        return math.sqrt(abs(self.x-x)**2+abs(self.y-y)**2)
     def update(self):
         
         self.x+=self.velocity_x

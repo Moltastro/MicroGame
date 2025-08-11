@@ -21,12 +21,11 @@ class GameHandler():
         if hasattr(self, '_initialized'):
             return
         self.game_objects=set()
-        
+        self.stopped=False
         self.last_time=ticks_ms()
         self.taskmanager=TaskManager()
         self.fps=30
         self.backgroundColor=rgb(255,255,255)
-
     @property
     def fps(self):
         return 1/self._frame_time
@@ -35,6 +34,12 @@ class GameHandler():
     def fps(self,other):
         self._frame_time=1/other
         self.taskmanager.dt=1/other
+    
+    def stop(self):
+        self.stopped=True
+    
+    def start(self):
+        self.stopped=False
 
     def update(self):
         
@@ -49,9 +54,9 @@ class GameHandler():
 
     def run(self):
         frame_start = ticks_ms()
-        self.update()
+        if not self.stopped:
+            self.update()
         self.draw()
-
         frame_end = ticks_ms()
         elapsed = ticks_diff(frame_end,frame_start)/1000
         if elapsed< self._frame_time:

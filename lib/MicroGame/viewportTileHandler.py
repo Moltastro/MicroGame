@@ -41,7 +41,7 @@ class ViewPort:
         # Uses tile coordinates to track dirty tiles which need changing
         self.dirty_tiles = set()
         # The framebuffer which is used to draw to the screen
-        self.drawing_framebuffer,self.byteArray=SingleFrameBufferDriver.create_framebuffer(self.tile_size_x,self.tile_size_y)
+        self.drawing_framebuffer=SingleFrameBufferDriver.create_framebuffer(self.tile_size_x,self.tile_size_y)
         self.draw_entire_screen()
     
     @property
@@ -68,15 +68,16 @@ class ViewPort:
         return world_x - self.x, world_y - self.y
     
     def is_visible(self, drawable:"Drawable"):
-        return not (drawable.x + drawable.w < self.x or drawable.x > self.x + self.width or drawable.y + drawable.h < self.y or drawable.y > self.y + self.height)
+        return not (drawable._screen_x + drawable.w < self.x or drawable._screen_x > self.x + self.width or drawable._screen_y + drawable.h < self.y or drawable._screen_y > self.y + self.height)
     
     def store_drawable_in_tiles_and_mark_dirty(self,drawable:"Drawable"):
         """Stores the drawable in the tiles it is visible in and marks those tiles dirty, 
         returns the bbox coordinates of the tile it was in or None if not visible
         """
         if self.is_visible(drawable):
-            x0,y0 = self.tile_coordinates(drawable.x,drawable.y)
-            x1,y1 = self.tile_coordinates(drawable.x+drawable.w, drawable.y+drawable.h)
+            draw_x,draw_y,draw_w,draw_h=int(drawable._screen_x),int(drawable._screen_y),int(drawable.w),int(drawable.h)
+            x0,y0 = self.tile_coordinates(draw_x,draw_y)
+            x1,y1 = self.tile_coordinates(draw_x+draw_w, draw_y+draw_h)
             x0 = max(0, min(x0, self.tiles_x-1))
             x1 = max(0, min(x1, self.tiles_x-1))
             y0 = max(0, min(y0, self.tiles_y-1))
@@ -129,7 +130,7 @@ class ViewPort:
         return self.tile_coordinates_to_tile_index(tile_x,tile_y)
     
     def tile_coordinates_to_tile_index(self,tx,ty):
-        return ty*self.tiles_x + tx
+        return int(ty*self.tiles_x + tx)
     
     def tile_coordinates(self,x,y):
         # Convert pixel coords to tile coords
@@ -150,22 +151,32 @@ class ViewPort:
             self.draw_tile(*dirty_tile_coord)
             
         self.dirty_tiles.clear()
+    
+    def screenX_to_centerX_coordinates(self,x):
+        return x-self.width/2
+    def centerX_to_screenX_coordinates(self,x):
+        return x+self.width/2
+    def screenY_to_centerY_coordinates(self,y):
+        return self.height/2-y
+    def centerY_to_screenY_coordinates(self,y):
+        return self.height/2-y
+    
     def draw_tile(self,tx,ty):
         self.drawing_framebuffer.fill(self.backgroundColor)
         #Get the set with sprites within this tile
         sprite_set:set=self.tile_sprite_sets[self.tile_coordinates_to_tile_index(tx,ty)]
         drawable:"Drawable"
         x0,y0=self.tile_coords_to_screen_coordinates(tx,ty)
-        for drawable in sorted(sprite_set, key=lambda sprite:sprite.z,reverse=True):
+        for drawable in sorted(sprite_set, key=lambda sprite:sprite.z):
             drawable.draw_into(self.drawing_framebuffer, *drawable.framebuffer_relative_coordinates(x0,y0))
         #Set the window to focus the tile
         SingleFrameBufferDriver.set_window(x0,y0,self.tile_size_x,self.tile_size_y)
         #Send the bytearray contained within the framebuf
-        SingleFrameBufferDriver.send_color_data(self.byteArray)
+        SingleFrameBufferDriver.send_color_data(self.drawing_framebuffer.buffer)
 
     def draw_entire_screen(self):
         for tx in range(self.tiles_x):
             for ty in range(self.tiles_y):
                 self.draw_tile(tx,ty)
 
-singleViewPort=ViewPort(0,0,240,300,tiles_x=1,tiles_y=15)
+singleViewPort=ViewPort(0,0,240,300,tiles_x=12,tiles_y=1)
