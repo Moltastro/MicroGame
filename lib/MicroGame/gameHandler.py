@@ -1,4 +1,5 @@
 from .viewportTileHandler import singleViewPort
+from .taskmanager import TaskManager
 from .drawable import *
 from time import sleep,ticks_ms,ticks_diff
 
@@ -20,8 +21,11 @@ class GameHandler():
         if hasattr(self, '_initialized'):
             return
         self.game_objects=set()
-        self._frame_time=1/30
+        
         self.last_time=ticks_ms()
+        self.taskmanager=TaskManager()
+        self.fps=30
+        self.backgroundColor=rgb(255,255,255)
 
     @property
     def fps(self):
@@ -30,10 +34,14 @@ class GameHandler():
     @fps.setter
     def fps(self,other):
         self._frame_time=1/other
+        self.taskmanager.dt=1/other
+
     def update(self):
+        
         for object in self.game_objects:
             debug(object)
             object.update()
+        self.taskmanager.update()
     
     def draw(self):
         singleViewPort.push_changes()

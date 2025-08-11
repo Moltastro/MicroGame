@@ -34,6 +34,8 @@ class ViewPort:
             self.tile_size_y=tile_size_y
             self.tiles_x=width//tile_size_x
             self.tiles_y=height//tile_size_y
+        
+        self._backgroundC=rgb(255,255,255)
         #Holds all sprites for every tile
         self.tile_sprite_sets = [set() for _ in range(self.tiles_x * self.tiles_y)]
         # Uses tile coordinates to track dirty tiles which need changing
@@ -42,6 +44,26 @@ class ViewPort:
         self.drawing_framebuffer,self.byteArray=SingleFrameBufferDriver.create_framebuffer(self.tile_size_x,self.tile_size_y)
         self.draw_entire_screen()
     
+    @property
+    def backgroundColor(self):
+        return self._backgroundC
+    
+    @backgroundColor.setter
+    def backgroundColor(self,other):
+        self._backgroundC=other
+        self.draw_entire_screen()
+    def mark_region_dirty(self, x, y, w, h):
+        """Mark all tiles overlapped by given region as dirty."""
+        x0, y0 = self.tile_coordinates(x, y)
+        x1, y1 = self.tile_coordinates(x + w, y + h)
+        x0 = max(0, min(x0, self.tiles_x - 1))
+        x1 = max(0, min(x1, self.tiles_x - 1))
+        y0 = max(0, min(y0, self.tiles_y - 1))
+        y1 = max(0, min(y1, self.tiles_y - 1))
+        for tx in range(x0, x1 + 1):
+            for ty in range(y0, y1 + 1):
+                self.dirty_tiles.add((tx, ty))
+        
     def world_to_screen(self, world_x, world_y):
         return world_x - self.x, world_y - self.y
     
@@ -129,7 +151,7 @@ class ViewPort:
             
         self.dirty_tiles.clear()
     def draw_tile(self,tx,ty):
-        self.drawing_framebuffer.fill(rgb(0,0,0))
+        self.drawing_framebuffer.fill(self.backgroundColor)
         #Get the set with sprites within this tile
         sprite_set:set=self.tile_sprite_sets[self.tile_coordinates_to_tile_index(tx,ty)]
         drawable:"Drawable"
