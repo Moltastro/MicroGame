@@ -267,7 +267,7 @@ class Rectangle(Drawable):
         super().__init__(x,y,w,h,z)
         self.color=color
     def draw_into(self, fb:framebuf.FrameBuffer, relative_x,relative_y):
-        fb.rect(relative_x, relative_y, self.w, self.h,self.color)
+        fb.rect(relative_x, relative_y, self.w, self.h,self.color,True)
 
 class Ellipse(Drawable):
     """
