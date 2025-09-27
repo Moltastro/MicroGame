@@ -1,4 +1,4 @@
-from displayInterface import DisplayInterface
+from .displayInterface import DisplayInterface
 from machine import Pin, SPI, PWM
 import time
 DC = 8

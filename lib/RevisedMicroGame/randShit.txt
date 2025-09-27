@@ -1,0 +1,2 @@
+(?:RevisedMicroGame.)(byteBuffer|collisionShape|coordinateSystem|displayDrivers|displayInterface|drawable|gameHandler|gameObject|taskManager|tile|tileHandler|util) (import)
+.$1 $2

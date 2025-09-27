@@ -1,7 +1,7 @@
-from .viewportTileHandler import singleViewPort
+from .viewport.TileHandler import singleViewPort
 from . framebuffer import SingleFrameBufferDriver,FramebufferWrapper
 import framebuf
-from .util import *
+from ..util import *
 import math
 
 class Image:

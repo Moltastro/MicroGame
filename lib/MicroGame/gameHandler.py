@@ -1,6 +1,6 @@
-from .viewportTileHandler import singleViewPort
-from .taskmanager import TaskManager
-from .drawable import *
+from .viewport.TileHandler import singleViewPort
+from ..taskmanager import TaskManager
+from ..drawable import *
 from time import sleep,ticks_ms,ticks_diff
 
 class GameHandler():

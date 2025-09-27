@@ -1,7 +1,7 @@
 from machine import Pin, SPI, PWM
 import framebuf
 import time
-from .util import debug
+from ..util import debug
 import math
 
 class FramebufferWrapper(framebuf.FrameBuffer):

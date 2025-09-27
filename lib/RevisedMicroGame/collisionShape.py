@@ -1,12 +1,13 @@
-from abc import ABC, abstractmethod
-from typing import Self
+from typing import Self,TYPE_CHECKING # type: ignore
 import math
-from coordinateSystem import *
+from .coordinateSystem import Vec2
+if TYPE_CHECKING:
+    from .coordinateSystem import VectorMapFactory
 
-class Shape(ABC):
-    def __init__(self,pos:Vector2, on_update=lambda:None) -> None:
+class Shape:
+    def __init__(self,pos:Vec2, on_update=lambda:None) -> None:
         super().__init__()
-        self.pos=Vector2(0,0)
+        self.pos=Vec2(0,0)
         self.pos.on_update=self._on_update
         self.on_update=on_update
 
@@ -18,26 +19,22 @@ class Shape(ABC):
     def _on_update(self):
         self.on_update(self.clone())
 
-    @abstractmethod
     def overlaps(self, other: "Shape") -> bool:
-        pass
+        raise NotImplementedError
 
     # Helper methods for double-dispatch
-    @abstractmethod
     def overlaps_circle(self, circle: "Circle") -> bool:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def overlaps_square(self, square: Self) -> bool:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def clone(self) -> Self:
-        pass
+        raise NotImplementedError
 
 
 class Circle(Shape):
-    def __init__(self, pos:Vector2, radius):
+    def __init__(self, pos:Vec2, radius):
         super().__init__(pos)
         self.radius = radius
 
@@ -63,7 +60,7 @@ class Circle(Shape):
 
 
 class BBox(Shape):
-    def __init__(self, pos:Vector2, dimensions:Vector2, on_update=lambda:None):
+    def __init__(self, pos:Vec2, dimensions:Vec2, on_update=lambda:None):
         super().__init__(pos,on_update)
         self.size=dimensions
         self.size.on_update=self._on_update
@@ -99,8 +96,9 @@ class BBox(Shape):
         new_w = min(self.size.x, (clamp_box.pos.x + clamp_box.size.x) - new_x)
         new_h = min(self.size.y, (clamp_box.pos.y + clamp_box.size.y) - new_y)
 
-        self.pos = Vector2(new_x, new_y)
-        self.size = Vector2(new_w, new_h)
+        self.pos = Vec2(new_x, new_y)
+        self.size = Vec2(new_w, new_h)
         return self
 
-                                                                         
+    def __repr__(self) -> str:
+        return f"BBox: [pos {self.pos}, size {self.size}]"

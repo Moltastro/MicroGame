@@ -1,9 +1,6 @@
-import numpy as np
-import math
-from displayInterface import DisplayInterface
 import math
 
-class Vector2:
+class Vec2:
     def __init__(self, x=0.0, y=0.0, on_update=None):
         self._x = float(x)
         self._y = float(y)
@@ -51,35 +48,35 @@ class Vector2:
         if self.on_update: self.on_update()
 
     # --- Operator Overloads (Immutable) ---
-    def __add__(self, other: "Vector2") -> "Vector2":
-        return Vector2(self.x + other.x, self.y + other.y)
-    def __sub__(self, other: "Vector2") -> "Vector2":
-        return Vector2(self.x - other.x, self.y - other.y)
-    def __mul__(self, scalar: float) -> "Vector2":
-        return Vector2(self.x * scalar, self.y * scalar)
-    def __rmul__(self, scalar: float) -> "Vector2":
+    def __add__(self, other: "Vec2") -> "Vec2":
+        return Vec2(self.x + other.x, self.y + other.y)
+    def __sub__(self, other: "Vec2") -> "Vec2":
+        return Vec2(self.x - other.x, self.y - other.y)
+    def __mul__(self, scalar: float) -> "Vec2":
+        return Vec2(self.x * scalar, self.y * scalar)
+    def __rmul__(self, scalar: float) -> "Vec2":
         return self.__mul__(scalar)
-    def __truediv__(self, scalar: float) -> "Vector2":
+    def __truediv__(self, scalar: float) -> "Vec2":
         if scalar == 0:
             raise ZeroDivisionError("Cannot divide Vector2 by zero.")
-        return Vector2(self.x / scalar, self.y / scalar)
-    def __neg__(self) -> "Vector2":
-        return Vector2(-self.x, -self.y)
+        return Vec2(self.x / scalar, self.y / scalar)
+    def __neg__(self) -> "Vec2":
+        return Vec2(-self.x, -self.y)
 
     # --- In-Place Operator Overloads (Mutable) ---
-    def __iadd__(self, other: "Vector2") -> "Vector2":
+    def __iadd__(self, other: "Vec2") -> "Vec2":
         self.x += other.x
         self.y += other.y
         return self
-    def __isub__(self, other: "Vector2") -> "Vector2":
+    def __isub__(self, other: "Vec2") -> "Vec2":
         self.x -= other.x
         self.y -= other.y
         return self
-    def __imul__(self, scalar: float) -> "Vector2":
+    def __imul__(self, scalar: float) -> "Vec2":
         self.x *= scalar
         self.y *= scalar
         return self
-    def __itruediv__(self, scalar: float) -> "Vector2":
+    def __itruediv__(self, scalar: float) -> "Vec2":
         if scalar == 0:
             raise ZeroDivisionError("Cannot divide Vector2 by zero.")
         self.x /= scalar
@@ -88,22 +85,22 @@ class Vector2:
 
     # --- Comparisons ---
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Vector2):
+        if not isinstance(other, Vec2):
             return NotImplemented
         return math.isclose(self.x, other.x) and math.isclose(self.y, other.y)
 
     # --- Vector Operations ---
-    def dot(self, other: "Vector2") -> float:
+    def dot(self, other: "Vec2") -> float:
         return self.x * other.x + self.y * other.y
     def magnitude(self) -> float:
         return math.sqrt(self.x * self.x + self.y * self.y)
-    def normalize(self) -> "Vector2":
+    def normalize(self) -> "Vec2":
         norm = self.magnitude()
         if norm != 0:
             self.x /= norm
             self.y /= norm
         return self  # Mutates self instead of returning a new Vector2
-    def rotate(self, angle_degrees: float) -> "Vector2":
+    def rotate(self, angle_degrees: float) -> "Vec2":
         """Rotate vector by angle in degrees (counterclockwise, mutating)."""
         theta = math.radians(angle_degrees)
         c, s = math.cos(theta), math.sin(theta)
@@ -111,24 +108,24 @@ class Vector2:
         y_new = s * self.x + c * self.y
         self.x, self.y = x_new, y_new
         return self
-    def perpendicular(self) -> "Vector2":
+    def perpendicular(self) -> "Vec2":
         """Return a new vector perpendicular to this one (90° CCW)."""
-        return Vector2(-self.y, self.x)
+        return Vec2(-self.y, self.x)
     
-    def clone(self) -> "Vector2":
-        return Vector2(self.x, self.y)
+    def clone(self) -> "Vec2":
+        return Vec2(self.x, self.y)
     
     def toInt(self) -> tuple[int,int]:
         return (int(self.x),int(self.y))
     # --- Representation ---
     def __repr__(self):
-        return f"Vector2(x={self.x:.3f}, y={self.y:.3f})"
+        return f"(x={self.x:.3f}, y={self.y:.3f})"
 
 class VectorMapFactory:
     def __init__(self,x_map=lambda x:x,y_map=lambda y:y):
         self.x_map=x_map
         self.y_map=y_map
 
-    def map(self,vec:Vector2)->Vector2:
-        return Vector2(self.x_map(vec.x),self.y_map(vec.y))
-        
+    def map(self,vec:Vec2)->Vec2:
+        return Vec2(self.x_map(vec.x),self.y_map(vec.y))
+

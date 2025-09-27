@@ -1,6 +1,6 @@
-from .drawable import Drawable
-from .viewportTileHandler import *
-from .gameHandler import GameHandler
+from ..drawable import Drawable
+from .viewport.TileHandler import *
+from ..gameHandler import GameHandler
 import math
 if __name__ == "__main__":
     from typing import Callable
