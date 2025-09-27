@@ -1,0 +1,1 @@
+Make sure callbacks are made to update drawable and mark tile dirty when moving

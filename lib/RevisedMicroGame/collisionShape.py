@@ -4,12 +4,15 @@ from .coordinateSystem import Vec2
 if TYPE_CHECKING:
     from .coordinateSystem import VectorMapFactory
 
+DEBUG = False
+
 class Shape:
     def __init__(self,pos:Vec2, on_update=lambda:None) -> None:
         super().__init__()
-        self.pos=Vec2(0,0)
+        self.pos=pos
         self.pos.on_update=self._on_update
         self.on_update=on_update
+        if DEBUG: print(f"[Shape] Created at {self.pos}")
 
     def transform(self,transform:VectorMapFactory):
         clone=self.clone()
@@ -17,9 +20,10 @@ class Shape:
         return clone
     
     def _on_update(self):
-        self.on_update(self.clone())
+        self.on_update()
 
     def overlaps(self, other: "Shape") -> bool:
+        if DEBUG: print(f"[Shape] Checking overlap with {other}")
         raise NotImplementedError
 
     # Helper methods for double-dispatch
@@ -32,13 +36,18 @@ class Shape:
     def clone(self) -> Self:
         raise NotImplementedError
 
+    def __repr__(self):
+        return f"Shape(pos={self.pos})"
+
 
 class Circle(Shape):
     def __init__(self, pos:Vec2, radius):
         super().__init__(pos)
         self.radius = radius
+        if DEBUG: print(f"[Circle] Created at {pos} radius={radius}")
 
     def overlaps(self, other: Shape) -> bool:
+        if DEBUG: print(f"[Circle] Overlaps with {other}")
         return other.overlaps_circle(self)
 
     def overlaps_circle(self, circle) -> bool:
@@ -58,14 +67,19 @@ class Circle(Shape):
     def clone(self):
         return Circle(self.pos.clone(), self.radius)
 
+    def __repr__(self):
+        return f"Circle(pos={self.pos}, radius={self.radius})"
+
 
 class BBox(Shape):
     def __init__(self, pos:Vec2, dimensions:Vec2, on_update=lambda:None):
         super().__init__(pos,on_update)
         self.size=dimensions
         self.size.on_update=self._on_update
+        if DEBUG: print(f"[BBox] Created at {pos} size={dimensions}")
 
     def overlaps(self, other) -> bool:
+        if DEBUG: print(f"[BBox] Overlaps with {other}")
         return other.overlaps_square(self)
 
     def overlaps_circle(self, circle) -> bool:
@@ -84,6 +98,7 @@ class BBox(Shape):
         return BBox(self.pos.clone(), self.size.clone())
 
     def clamp(self, clamp_box: "BBox") -> "BBox":
+        if DEBUG: print(f"[BBox] Clamping to {clamp_box}")
         """
         Clamp this BBox inside the clamp_box.
         Modifies in place and returns self for chaining.

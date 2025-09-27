@@ -1,10 +1,13 @@
 import math
 
+DEBUG = False
+
 class Vec2:
     def __init__(self, x=0.0, y=0.0, on_update=None):
         self._x = float(x)
         self._y = float(y)
         self.on_update = on_update
+        if DEBUG: print(f"[Vec2] Created ({self._x}, {self._y})")
 
     # --- Properties ---
     @property
@@ -49,14 +52,18 @@ class Vec2:
 
     # --- Operator Overloads (Immutable) ---
     def __add__(self, other: "Vec2") -> "Vec2":
+        if DEBUG: print(f"[Vec2] Adding {self} + {other}")
         return Vec2(self.x + other.x, self.y + other.y)
     def __sub__(self, other: "Vec2") -> "Vec2":
+        if DEBUG: print(f"[Vec2] Subtracting {self} - {other}")
         return Vec2(self.x - other.x, self.y - other.y)
     def __mul__(self, scalar: float) -> "Vec2":
+        if DEBUG: print(f"[Vec2] Multiplying {self} * {scalar}")
         return Vec2(self.x * scalar, self.y * scalar)
     def __rmul__(self, scalar: float) -> "Vec2":
         return self.__mul__(scalar)
     def __truediv__(self, scalar: float) -> "Vec2":
+        if DEBUG: print(f"[Vec2] Dividing {self} / {scalar}")
         if scalar == 0:
             raise ZeroDivisionError("Cannot divide Vector2 by zero.")
         return Vec2(self.x / scalar, self.y / scalar)
@@ -95,12 +102,14 @@ class Vec2:
     def magnitude(self) -> float:
         return math.sqrt(self.x * self.x + self.y * self.y)
     def normalize(self) -> "Vec2":
+        if DEBUG: print(f"[Vec2] Normalizing {self}")
         norm = self.magnitude()
         if norm != 0:
             self.x /= norm
             self.y /= norm
         return self  # Mutates self instead of returning a new Vector2
     def rotate(self, angle_degrees: float) -> "Vec2":
+        if DEBUG: print(f"[Vec2] Rotating {self} by {angle_degrees} degrees")
         """Rotate vector by angle in degrees (counterclockwise, mutating)."""
         theta = math.radians(angle_degrees)
         c, s = math.cos(theta), math.sin(theta)
@@ -113,6 +122,7 @@ class Vec2:
         return Vec2(-self.y, self.x)
     
     def clone(self) -> "Vec2":
+        if DEBUG: print(f"[Vec2] Cloning {self}")
         return Vec2(self.x, self.y)
     
     def toInt(self) -> tuple[int,int]:
@@ -123,9 +133,14 @@ class Vec2:
 
 class VectorMapFactory:
     def __init__(self,x_map=lambda x:x,y_map=lambda y:y):
+        if DEBUG: print("[VectorMapFactory] Created")
         self.x_map=x_map
         self.y_map=y_map
 
     def map(self,vec:Vec2)->Vec2:
+        if DEBUG: print(f"[VectorMapFactory] Mapping {vec}")
         return Vec2(self.x_map(vec.x),self.y_map(vec.y))
+    
+    def __repr__(self):
+        return f"VectorMapFactory(x_map={self.x_map}, y_map={self.y_map})"
 

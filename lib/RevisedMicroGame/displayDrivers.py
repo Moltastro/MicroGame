@@ -8,8 +8,11 @@ MOSI = 11
 RST = 12
 BL = 13
 
+DEBUG = False
+
 class WaveShareDisplay(DisplayInterface):
     def __init__(self, width=240, height=300):
+        if DEBUG: print(f"[WaveShareDisplay] Initializing display {width}x{height}")
         self.width = width
         self.height = height
 
@@ -27,6 +30,7 @@ class WaveShareDisplay(DisplayInterface):
         self.pwm.duty_u16(65535) 
 
     def write_cmd(self, cmd):
+        if DEBUG: print(f"[WaveShareDisplay] Write CMD: {cmd:#04x}")
         self.cs(1)
         self.dc(0)
         self.cs(0)
@@ -34,6 +38,7 @@ class WaveShareDisplay(DisplayInterface):
         self.cs(1)
 
     def write_data(self, data):
+        if DEBUG: print(f"[WaveShareDisplay] Write DATA: {data}")
         self.cs(1)
         self.dc(1)
         self.cs(0)
@@ -41,6 +46,7 @@ class WaveShareDisplay(DisplayInterface):
         self.cs(1)
 
     def set_window(self, x, y, w, h):
+        if DEBUG: print(f"[WaveShareDisplay] Set window x={x}, y={y}, w={w}, h={h}")
         # Set column address
         self.write_cmd(0x2A)
         self.write_data(bytearray([x >> 8, x & 0xFF, (x + w - 1) >> 8, (x + w - 1) & 0xFF]))
@@ -53,6 +59,7 @@ class WaveShareDisplay(DisplayInterface):
         self.write_cmd(0x2C)
 
     def send_color_data(self, data):
+        if DEBUG: print(f"[WaveShareDisplay] Send color data, len={len(data) if hasattr(data,'__len__') else 1}")
         self.cs(1)
         self.dc(1)
         self.cs(0)
@@ -60,14 +67,17 @@ class WaveShareDisplay(DisplayInterface):
         self.cs(1)
 
     def set_bl_pwm(self, duty):
+        if DEBUG: print(f"[WaveShareDisplay] Set BL PWM: {duty}")
         self.pwm.duty_u16(duty)
 
     def show_region(self, x, y, w, h, buf):
+        if DEBUG: print(f"[WaveShareDisplay] Show region x={x}, y={y}, w={w}, h={h}")
         # Push the framebuffer region to the display at (x, y)
         self.set_window(x, y, w, h)
         self.send_color_data(buf)
 
     def init_display(self):
+        if DEBUG: print("[WaveShareDisplay] Initializing display hardware")
         """Initialize dispaly"""  
         self.rst(1)
         time.sleep(0.01)
@@ -238,3 +248,6 @@ class WaveShareDisplay(DisplayInterface):
         time.sleep(0.2)
         self.write_cmd(0x29)
         time.sleep(0.01)
+
+    def __repr__(self):
+        return f"WaveShareDisplay(width={self.width}, height={self.height})"
