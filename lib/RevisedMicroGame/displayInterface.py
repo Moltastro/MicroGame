@@ -2,7 +2,7 @@ from .coordinateSystem import *
 from .collisionShape import BBox
 import struct
 from .byteBuffer import ByteBuffer
-DEBUG = True
+DEBUG = False
 class DisplayInterface:
     def __init__(self,width:int,height:int):
         self.width=width
@@ -21,7 +21,6 @@ class DisplayInterface:
         if DEBUG: print(f"[DisplayInterface] Showing region {BBox}")
         self.set_window(BBox)
         self.send_color_data(frameBuffer)
-
     def __repr__(self):
         return f"DisplayInterface(width={self.width}, height={self.height})"
 import struct

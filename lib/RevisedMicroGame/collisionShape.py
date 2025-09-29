@@ -72,11 +72,19 @@ class Circle(Shape):
 
 
 class BBox(Shape):
-    def __init__(self, pos:Vec2, dimensions:Vec2, on_update=lambda:None):
+    def __init__(self, pos:Vec2, size:Vec2, on_update=lambda:None):
         super().__init__(pos,on_update)
-        self.size=dimensions
+        self.size=size
         self.size.on_update=self._on_update
-        if DEBUG: print(f"[BBox] Created at {pos} size={dimensions}")
+        if DEBUG: print(f"[BBox] Created at {pos} size={size}")
+    
+    @property
+    def end(self):
+        return self.pos+self.size
+    
+    @end.setter
+    def end(self,other):
+        self.size.set(other-self.pos)
 
     def overlaps(self, other) -> bool:
         if DEBUG: print(f"[BBox] Overlaps with {other}")
@@ -88,9 +96,9 @@ class BBox(Shape):
 
     def overlaps_square(self, square) -> bool:
         return not (
-            square.pos.x + square.dimensions.x < self.pos.x or
+            square.pos.x + square.size.x < self.pos.x or
             square.pos.x > self.pos.x + self.size.x or
-            square.pos.y + square.dimensions.x < self.pos.y or
+            square.pos.y + square.size.x < self.pos.y or
             square.pos.y > self.pos.y + self.size.y
         )
 
@@ -115,5 +123,13 @@ class BBox(Shape):
         self.size = Vec2(new_w, new_h)
         return self
 
+    def union(self,other:'BBox'):
+        pos=self.pos.min(other.pos)
+        end=self.end.max(other.end)
+        return BBox(pos,end-pos)
+    
+    def area(self):
+        return self.size.x*self.size.y
+    
     def __repr__(self) -> str:
         return f"BBox: [pos {self.pos}, size {self.size}]"

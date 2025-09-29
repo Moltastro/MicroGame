@@ -26,6 +26,14 @@ class Vec2:
         self._y = float(value)
         if self.on_update: self.on_update()
     
+    def move(self,x,y):
+        self.x=x
+        self.y=y
+
+    def set(self,vec2:'Vec2'):
+        self.x=vec2.x
+        self.y=vec2.y
+
     @property
     def angle(self):
         """Angle in degrees (0° = right, 90° = down)"""
@@ -35,6 +43,8 @@ class Vec2:
     def angle(self, angle_degrees):
         """Set angle in degrees (0° = right, 90° = down), keeping magnitude."""
         mag = self.magnitude()
+        if mag==0:
+            print(f"[WARN] Tried to set angle on zero-length vector.")
         theta = math.radians(angle_degrees)
         self.x = mag * math.cos(theta)
         self.y = mag * math.sin(theta)
@@ -101,6 +111,7 @@ class Vec2:
         return self.x * other.x + self.y * other.y
     def magnitude(self) -> float:
         return math.sqrt(self.x * self.x + self.y * self.y)
+    
     def normalize(self) -> "Vec2":
         if DEBUG: print(f"[Vec2] Normalizing {self}")
         norm = self.magnitude()
@@ -130,6 +141,11 @@ class Vec2:
     # --- Representation ---
     def __repr__(self):
         return f"(x={self.x:.3f}, y={self.y:.3f})"
+    def min(self,vec:'Vec2'):
+        return Vec2(min(vec.x,self.x),min(vec.y,self.y))
+    
+    def max(self,vec:'Vec2'):
+        return Vec2(max(vec.x,self.x),max(self.y,vec.y))
 
 class VectorMapFactory:
     def __init__(self,x_map=lambda x:x,y_map=lambda y:y):

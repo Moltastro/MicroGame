@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from .drawable import Drawable
     from .byteBuffer import ByteBuffer
 
-DEBUG = True
+DEBUG = False
 
 class Tile:
     def __init__(self,bbox:BBox) -> None:

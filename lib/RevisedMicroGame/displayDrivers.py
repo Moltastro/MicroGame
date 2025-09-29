@@ -1,5 +1,7 @@
 from .displayInterface import DisplayInterface
+from .byteBuffer import ByteBuffer
 from machine import Pin, SPI, PWM
+from .collisionShape import BBox
 import time
 DC = 8
 CS = 9
@@ -12,6 +14,7 @@ DEBUG = False
 
 class WaveShareDisplay(DisplayInterface):
     def __init__(self, width=240, height=300):
+        super().__init__(width,height)
         if DEBUG: print(f"[WaveShareDisplay] Initializing display {width}x{height}")
         self.width = width
         self.height = height
@@ -45,7 +48,9 @@ class WaveShareDisplay(DisplayInterface):
         self.spi.write(bytearray([data]) if isinstance(data, int) else data)
         self.cs(1)
 
-    def set_window(self, x, y, w, h):
+    def set_window(self, bbox:BBox):
+        x,y=bbox.pos.toInt()
+        w,h=bbox.size.toInt()
         if DEBUG: print(f"[WaveShareDisplay] Set window x={x}, y={y}, w={w}, h={h}")
         # Set column address
         self.write_cmd(0x2A)
@@ -58,7 +63,8 @@ class WaveShareDisplay(DisplayInterface):
         # Write memory command
         self.write_cmd(0x2C)
 
-    def send_color_data(self, data):
+    def send_color_data(self, buffer:ByteBuffer):
+        data=buffer.buffer
         if DEBUG: print(f"[WaveShareDisplay] Send color data, len={len(data) if hasattr(data,'__len__') else 1}")
         self.cs(1)
         self.dc(1)
@@ -70,10 +76,9 @@ class WaveShareDisplay(DisplayInterface):
         if DEBUG: print(f"[WaveShareDisplay] Set BL PWM: {duty}")
         self.pwm.duty_u16(duty)
 
-    def show_region(self, x, y, w, h, buf):
-        if DEBUG: print(f"[WaveShareDisplay] Show region x={x}, y={y}, w={w}, h={h}")
+    def show_region(self,bbox:BBox, buf:ByteBuffer):
         # Push the framebuffer region to the display at (x, y)
-        self.set_window(x, y, w, h)
+        self.set_window(bbox)
         self.send_color_data(buf)
 
     def init_display(self):
@@ -250,4 +255,4 @@ class WaveShareDisplay(DisplayInterface):
         time.sleep(0.01)
 
     def __repr__(self):
-        return f"WaveShareDisplay(width={self.width}, height={self.height})"
+        return f"WaveShareDisplay(width={self.bbox.size.x}, height={self.bbox.size.y})"

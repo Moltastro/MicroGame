@@ -9,7 +9,7 @@ DEBUG = False
 
 class Drawable:
     def __init__(self, x=0, y=0, w=0, h=0, z=0):
-        self.bbox=BBox(Vec2(x,y),Vec2(w,h),)
+        self.bbox=BBox(Vec2(x,y),Vec2(w,h),self._on_move)
         self.z = z
         self.previous_tiles=set()
         self.has_moved=True
@@ -70,7 +70,7 @@ class Rectangle(Drawable):
         y = int(relativePos.y)
         w = int(self.bbox.size.x)
         h = int(self.bbox.size.y)
-        fb.rect(x, y, w, h, self.color) # type: ignore
+        fb.rect(x, y, w, h-1, self.color) # type: ignore
 
     def __repr__(self):
         return (f"Rectangle(bbox={self.bbox}, color={hex(self.color)}, z={self.z})")

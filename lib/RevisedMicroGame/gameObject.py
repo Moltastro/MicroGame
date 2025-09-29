@@ -18,12 +18,18 @@ class GameObject:
         if GameObject.gameHandler:
             GameObject.gameHandler.add(self)
     
+    @property
+    def pos(self):
+        return self.sprite.bbox.pos
+
+    @pos.setter
+    def pos(self,other:Vec2):
+        self.sprite.bbox.pos.set(other)
+
     def update(self,delta:float,tileHandler:'TileManager',coordinateSystem:'VectorMapFactory'):
         if DEBUG: print(f"[GameObject] Updating pos={self.pos} vel={self.velocity} delta={delta}")
-        print(f"[GameObject] pos={self.pos} vel={self.velocity}, delta={delta}")
         self.pos.x += self.velocity.x*delta
         self.pos.y += self.velocity.y*delta
-        print(f"[GameObject] newPos={self.pos}")
         self.sprite.update(tileHandler,coordinateSystem)
 
     @classmethod

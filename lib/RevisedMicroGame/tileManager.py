@@ -24,7 +24,7 @@ class TileManager:
                 tile=Tile(bbox)
                 row.append(tile)
                 self.dirty_tiles.add(tile)
-                if True: print(f"[TileManager] Created tile at ({tx},{ty}) bbox={bbox}")
+                if DEBUG: print(f"[TileManager] Created tile at ({tx},{ty}) bbox={bbox}")
             self.tiles.append(row)
         
         self.framebuffers=[ByteBuffer(self.size) for _ in range(buffers)]
@@ -36,17 +36,19 @@ class TileManager:
         
     def add_bbox(self,drawable:'Drawable',bbox:BBox):
         if DEBUG: print(f"[TileManager] add_bbox for drawable {drawable} bbox={bbox}")
-        clamped=bbox.clone().clamp(self.displayDriver.bbox)
-        topRight = self.tile_coordinates(clamped.pos)
-        bottomRight = self.tile_coordinates(clamped.pos + clamped.size)
-        dirty_tiles = set()
-        for tx in range(topRight[0], bottomRight[0] + 1):
-            for ty in range(topRight[1], bottomRight[1] + 1):
-                tile=self.tiles[ty][tx]  # <-- access as [row][col]
-                tile.drawables.add(drawable)
-                dirty_tiles.add(tile)
-        self.dirty_tiles.update(dirty_tiles)
-        return dirty_tiles
+        if bbox.overlaps(self.displayDriver.bbox):
+            clamped=bbox.clone().clamp(self.displayDriver.bbox)
+            topRight = self.tile_coordinates(clamped.pos)
+            bottomRight = self.tile_coordinates(clamped.pos + clamped.size - Vec2(1,1))
+            dirty_tiles = set()
+            for tx in range(topRight[0], bottomRight[0] + 1):
+                for ty in range(topRight[1], bottomRight[1] + 1):
+                    tile=self.tiles[ty][tx]  # <-- access as [row][col]
+                    tile.drawables.add(drawable)
+                    dirty_tiles.add(tile)
+            self.dirty_tiles.update(dirty_tiles)
+            return dirty_tiles
+        return set()
 
     def add_coord(self,drawable:'Drawable',pos:Vec2) -> 'Tile':
         if DEBUG: print(f"[TileManager] add_coord for drawable {drawable} pos={pos}")
@@ -59,6 +61,7 @@ class TileManager:
     def draw(self,coordinateSystem:'VectorMapFactory'):
         if DEBUG: print("[TileManager] Drawing dirty tiles")
         tile:'Tile'
+        print(f"Drawing {len(self.dirty_tiles)} dirty tiles")
         for tile in self.dirty_tiles:
             fb=self.framebuffers[0]
             fb.fill(0)
