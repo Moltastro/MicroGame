@@ -55,8 +55,8 @@ class GameHandler:
         
         if DEBUG: print("[GameHandler] Drawing tiles")
         self.events.emit(self.ENDING_UPDATE)
-
-        self.tileManager.draw(self.coordinateSystem)
+        print(type(self.tileManager))
+        self.tileManager.draw(self.coordinateSystem,self.backgroundColor)
 
     def add(self, gameObject: 'GameObject') -> None:
         if DEBUG: print(f"[GameHandler] Adding game object {gameObject}")

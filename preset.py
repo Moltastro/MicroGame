@@ -1,6 +1,6 @@
 from RevisedMicroGame.gameHandler import GameHandler
 from RevisedMicroGame.taskManager import ScriptScheduler
-from RevisedMicroGame.tileManager import TileManager
+from RevisedMicroGame.tileManager import VariableTileManager
 from RevisedMicroGame.coordinateSystem import VectorMapFactory
 from RevisedMicroGame.displayDrivers import WaveShareDisplay
 from RevisedMicroGame.gameObject import GameObject
@@ -11,9 +11,9 @@ from time import ticks_ms,ticks_diff
 WIDTH=240
 HEIGHT=300
 vectorMap=VectorMapFactory(lambda x: x+WIDTH//2, lambda y: -y+HEIGHT//2)
-Game=GameHandler(ScriptScheduler(),TileManager(WaveShareDisplay(),2,4,1),vectorMap)
+Game=GameHandler(ScriptScheduler(),VariableTileManager(WaveShareDisplay(),2,4,1),vectorMap)
 GameObject.bind_game_handler(Game)
-for i in range(50):
+for i in range(20):
     rect=GameObject(Rectangle(0,0,40,40,rgb(34, 182, 59)))
     rect.velocity.speed=40
     rect.velocity.angle=-randint(0,360)

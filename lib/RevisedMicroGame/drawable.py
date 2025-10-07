@@ -11,7 +11,7 @@ class Drawable:
     def __init__(self, x=0, y=0, w=0, h=0, z=0):
         self.bbox=BBox(Vec2(x,y),Vec2(w,h),self._on_move)
         self.z = z
-        self.previous_tiles=set()
+        self.old_bbox=BBox(Vec2(0,0),Vec2(0,0))
         self.has_moved=True
         
     def _on_move(self):
@@ -21,16 +21,14 @@ class Drawable:
     def update(self,tileHandler:TileManager,coordinateSystem:VectorMapFactory):
         if self.has_moved:
             if DEBUG: print(f"[Drawable] Updating {self}")
-            tileHandler.remove_from_tiles(self,self.previous_tiles)
-            self.previous_tiles=self.mark_dirty(tileHandler,coordinateSystem)
-            # Add self to relevant tiles
-            for tile in self.previous_tiles:
-                tile.drawables.add(self)
+            tileHandler.remove_from_bbox(self,self.old_bbox)
+            self.old_bbox.pos.set(self.bbox.pos)
+            self.old_bbox.size.set(self.bbox.size)
+            self.mark_dirty(tileHandler,coordinateSystem)
             self.has_moved=False
     
     def mark_dirty(self,tileHandler:TileManager,coordinateSystem:VectorMapFactory):
-        tiles=tileHandler.add_bbox(self,self.bbox.transform(coordinateSystem))
-        return tiles
+        tileHandler.add_bbox(self,self.bbox.transform(coordinateSystem))
     
     def draw_into(self, fb:ByteBuffer, relativePos:Vec2):
         """Override in subclass: draw shape into given FrameBuffer"""
@@ -41,8 +39,7 @@ class Drawable:
         return vectorMapFactory.map(self.bbox.pos)-bufferPos
 
     def __repr__(self):
-        return (f"Drawable(bbox={self.bbox}, z={self.z}, moved={self.has_moved}, "
-                f"tiles={len(self.previous_tiles)})")
+        return (f"Drawable(bbox={self.bbox}, z={self.z}, moved={self.has_moved}, ")
 
 class Ellipse(Drawable):
     def __init__(self, x=0, y=0, w=0, h=0, color=0xFFFF, z=0):

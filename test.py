@@ -1,19 +1,19 @@
 from RevisedMicroGame.gameHandler import *
 from RevisedMicroGame.displayInterface import DebugDisplay
-from RevisedMicroGame.tileManager import TileManager
+from RevisedMicroGame.tileManager import TileManagerWithProceduralDirtyRects
 from RevisedMicroGame.gameObject import GameObject
 from RevisedMicroGame.util import rgb
 from RevisedMicroGame.drawable import Rectangle
 import time 
 debug=DebugDisplay(16,16)
-Game=GameHandler(ScriptScheduler(),TileManager(debug,2,2),VectorMapFactory())
+Game=GameHandler(ScriptScheduler(),TileManagerWithProceduralDirtyRects(debug,2,2),VectorMapFactory())
 GameObject.bind_game_handler(Game)
 rect=GameObject(Rectangle(0,0,2,2))
 rect2=GameObject(Rectangle(x=3,y=1,w=1,h=1,color=rgb(233, 9, 9)))
 rect2.velocity=Vec2(-1,0)
 rect.velocity.x=1
 rect.velocity.y=1
-for i in range(10):
+for i in range(20):
     start = time.ticks_ms()
     Game.update()
     print("--------------Output:-----------------")
