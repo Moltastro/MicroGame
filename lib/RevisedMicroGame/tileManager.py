@@ -57,6 +57,7 @@ class GridTileManager(TileManager):
         self.hTiles=hTiles
         self.tiles=SpatialHash(displayDriver.width,displayDriver.height,hTiles,vTiles)
         self.dirtyRegions=[]
+        self.buffer=ByteBuffer(Vec2(displayDriver.width/hTiles,displayDriver.height/vTiles))
         
     def add_bbox(self, drawable: Drawable, bbox: BBox):
         self.tiles.add(drawable,bbox)
@@ -71,7 +72,11 @@ class GridTileManager(TileManager):
     def draw(self, coordinateSystem: VectorMapFactory, color: int):
         region:BBox
         for region in self.dirtyRegions:
-            drawables=self.tiles.local_areaRange(region)
+            drawables=self.tiles[region]
+            drawable:Drawable
             for drawable in drawables:
-
+                pos=drawable.tile_relative_coordinates(region.pos,coordinateSystem)
+                drawable.draw_into(self.buffer,pos)
+            self.displayDriver.show_region(region,self.buffer)
+        self.dirtyRegions.clear()
         
