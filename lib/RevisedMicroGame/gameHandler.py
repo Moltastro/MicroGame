@@ -2,6 +2,7 @@ from .coordinateSystem import *
 from .util import *
 from .collisionShape import *
 from .taskManager import ScriptScheduler
+import sys
 from time import ticks_ms, ticks_diff
 from typing import TYPE_CHECKING, Set, Callable, Optional  # type: ignore
 if TYPE_CHECKING:

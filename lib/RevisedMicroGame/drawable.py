@@ -8,12 +8,18 @@ if TYPE_CHECKING:
 DEBUG = False
 
 class Drawable:
-    def __init__(self, x=0, y=0, w=0, h=0, z=0):
-        self.bbox=BBox(Vec2(x,y),Vec2(w,h),self._on_move)
+    def __init__(self, offset_x=0, offset_y=0, w=0, h=0, z=0):
+        self.offset=Vec2(offset_x,offset_y)
+        self.pos=Vec2(0,0)
+        self.size=Vec2(w,h)
         self.z = z
-        self.old_bbox=BBox(Vec2(0,0),Vec2(0,0))
+        self.old_bbox=None
         self.has_moved=True
-        
+
+    @property
+    def bbox(self):
+        return BBox(self.pos+self.offset,self.size) 
+    
     def _on_move(self):
         self.has_moved=True
         if DEBUG: print(f"[Drawable] Moved {self}")
@@ -21,15 +27,19 @@ class Drawable:
     def update(self,tileHandler:TileManager,coordinateSystem:VectorMapFactory):
         if self.has_moved:
             if DEBUG: print(f"[Drawable] Updating {self}")
-            tileHandler.remove_from_bbox(self,self.old_bbox)
-            self.old_bbox.pos.set(self.bbox.pos)
-            self.old_bbox.size.set(self.bbox.size)
+            if self.old_bbox:
+                tileHandler.remove_from_bbox(self,self.old_bbox)
+            self.old_bbox=BBox(self.pos+self.offset,self.size)
             self.mark_dirty(tileHandler,coordinateSystem)
             self.has_moved=False
     
     def mark_dirty(self,tileHandler:TileManager,coordinateSystem:VectorMapFactory):
         tileHandler.add_bbox(self,self.bbox.transform(coordinateSystem))
     
+    def draw_into_tile(self,bufferPos:Vec2,vectorMapFactory:VectorMapFactory, fb:ByteBuffer, relativePos:Vec2):
+        self.tile_relative_coordinates(bufferPos,vectorMapFactory)
+        self.draw_into(fb,relativePos)
+
     def draw_into(self, fb:ByteBuffer, relativePos:Vec2):
         """Override in subclass: draw shape into given FrameBuffer"""
         pass

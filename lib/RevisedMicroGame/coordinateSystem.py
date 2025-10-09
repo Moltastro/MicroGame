@@ -1,29 +1,33 @@
 import math
 
 DEBUG = False
+try:
+    import ulab as np
+except:
+    import numpy as np
+
 
 class Vec2:
     def __init__(self, x=0.0, y=0.0, on_update=None):
-        self._x = float(x)
-        self._y = float(y)
+        self.v=np.array([x,y])
         self.on_update = on_update
-        if DEBUG: print(f"[Vec2] Created ({self._x}, {self._y})")
-
+        if DEBUG: print(f"[Vec2] Created ({self.x}, {self.y})")
+        
     # --- Properties ---
     @property
-    def x(self):
-        return self._x
+    def x(self) -> int:
+        return self.v[0] # type: ignore
     @x.setter
     def x(self, value):
-        self._x = float(value)
+        self.v[0]= int(value)
         if self.on_update: self.on_update()
 
     @property
-    def y(self):
-        return self._y
+    def y(self) -> int:
+        return self.v[1] # type: ignore
     @y.setter
     def y(self, value):
-        self._y = float(value)
+        self.v[1] = int(value)
         if self.on_update: self.on_update()
     
     def move(self,x,y):
@@ -48,17 +52,16 @@ class Vec2:
         theta = math.radians(angle_degrees)
         self.x = mag * math.cos(theta)
         self.y = mag * math.sin(theta)
-        if self.on_update: self.on_update()
     
     @property
     def speed(self):
         return self.magnitude()
+    
     @speed.setter
     def speed(self, new_speed):
         angle_rad = math.radians(self.angle)
         self.x = new_speed * math.cos(angle_rad)
         self.y = new_speed * math.sin(angle_rad)
-        if self.on_update: self.on_update()
 
     # --- Operator Overloads (Immutable) ---
     def __add__(self, other: "Vec2") -> "Vec2":

@@ -1,12 +1,22 @@
+"""
 from RevisedMicroGame.gameHandler import *
 from RevisedMicroGame.displayInterface import DebugDisplay
-from RevisedMicroGame.tileManager import TileManagerWithProceduralDirtyRects
+from RevisedMicroGame.tileManager import GridTileManager
 from RevisedMicroGame.gameObject import GameObject
 from RevisedMicroGame.util import rgb
 from RevisedMicroGame.drawable import Rectangle
 import time 
+"""
+from lib.RevisedMicroGame.gameHandler import *
+from lib.RevisedMicroGame.displayInterface import DebugDisplay
+from lib.RevisedMicroGame.tileManager import GridTileManager
+from lib.RevisedMicroGame.gameObject import GameObject
+from lib.RevisedMicroGame.coordinateSystem import VectorMapFactory
+from lib.RevisedMicroGame.util import rgb
+from lib.RevisedMicroGame.drawable import Rectangle
+import time 
 debug=DebugDisplay(16,16)
-Game=GameHandler(ScriptScheduler(),TileManagerWithProceduralDirtyRects(debug,2,2),VectorMapFactory())
+Game=GameHandler(ScriptScheduler(),GridTileManager(debug,2,2),VectorMapFactory())
 GameObject.bind_game_handler(Game)
 rect=GameObject(Rectangle(0,0,2,2))
 rect2=GameObject(Rectangle(x=3,y=1,w=1,h=1,color=rgb(233, 9, 9)))

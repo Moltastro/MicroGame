@@ -1,6 +1,6 @@
 from typing import Self,TYPE_CHECKING # type: ignore
 import math
-from .coordinateSystem import Vec2
+from .coordinateSystem import Vec2,VectorMapFactory
 if TYPE_CHECKING:
     from .coordinateSystem import VectorMapFactory
 
@@ -73,8 +73,8 @@ class Circle(Shape):
 
 class BBox(Shape):
     def __init__(self, pos:Vec2, size:Vec2, on_update=lambda:None):
-        super().__init__(pos,on_update)
-        self.size=size
+        super().__init__(pos.clone())
+        self.size=size.clone()
         self.size.on_update=self._on_update
         if DEBUG: print(f"[BBox] Created at {pos} size={size}")
     
@@ -101,10 +101,8 @@ class BBox(Shape):
             square.pos.y + square.size.x < self.pos.y or
             square.pos.y > self.pos.y + self.size.y
         )
-
     def clone(self):
-        return BBox(self.pos.clone(), self.size.clone())
-
+        return BBox(self.pos.clone(),self.size.clone())
     def clamp(self, clamp_box: "BBox") -> "BBox":
         if DEBUG: print(f"[BBox] Clamping to {clamp_box}")
         """
@@ -116,8 +114,8 @@ class BBox(Shape):
         new_y = max(clamp_box.pos.y, min(self.pos.y, clamp_box.pos.y + clamp_box.size.y))
 
         # Clamp size so the bbox does not exceed the clamp_box
-        new_w = min(self.size.x, (clamp_box.pos.x + clamp_box.size.x) - new_x)
-        new_h = min(self.size.y, (clamp_box.pos.y + clamp_box.size.y) - new_y)
+        new_w = min(self.size.x, (clamp_box.pos.x + clamp_box.size.x) - new_x)-1
+        new_h = min(self.size.y, (clamp_box.pos.y + clamp_box.size.y) - new_y)-1
 
         self.pos = Vec2(new_x, new_y)
         self.size = Vec2(new_w, new_h)

@@ -1,13 +1,23 @@
 from .collisionShape import BBox
 from .coordinateSystem import Vec2
-
+try:
+    import ulab as np
+except:
+    import numpy as np
+    
 class SpatialHash:
     def __init__(self,width,height,numCols,numRows) -> None:
+        self.bbox=BBox(Vec2(0,0),Vec2(width,height))
         self.numCols=numCols
         self.numRows=numRows
         self.tileSize=Vec2(width//numCols,height//numRows)
         self.create_buckets()
-        self.align=lambda x,y:((x//self.tileSize.x)*self.tileSize.x,(y//self.tileSize.y)*self.tileSize.y)
+        
+    def align(self,pos:Vec2):
+        x=(pos.x//self.tileSize.x)*self.tileSize.x
+        y=(pos.y//self.tileSize.y)*self.tileSize.y
+        return Vec2(x,y)
+    
     def get_rectilinear_bbox(self,bbox:BBox):
         local=self.tileSize
 
@@ -31,22 +41,22 @@ class SpatialHash:
     
     @staticmethod
     def local_areaRange(local):
-        for x in range(local[0][0],local[1][0]):
-            for y in range(local[0][1],local[1][1]):
+        for x in range(local[0][0],local[1][0]+1):
+            for y in range(local[0][1],local[1][1]+1):
                 yield x,y
 
     def bbox_to_index_bbox(self,bbox:BBox):
-        pos=bbox.pos
-        end=bbox.end
+        inside_bbox=bbox.clone().clamp(self.bbox)
+        pos=inside_bbox.pos
+        end=inside_bbox.end
         return ((int(pos.x//self.tileSize.x),int(pos.y//self.tileSize.y)),
                 (int(end.x//self.tileSize.x),int(end.y//self.tileSize.y)))
 
     def bbox_to_gridAligned_bbox(self,bbox:BBox):
-        pos=Vec2(*self.align(bbox.pos.x,bbox.pos.y))
         clone=bbox.clone()
-        clone.pos=pos
+        clone.pos=self.align(bbox.pos)
         end=clone.end
-        end=end.move(*self.align(end.x,end.y))
+        end=self.align(end)
         clone.end=end
 
     def flatten_local(self,x,y):
@@ -69,3 +79,13 @@ class SpatialHash:
                 res.update(self.grid[self.flatten_local(x,y)])
             return list(res)            
         raise ValueError
+    def __repr__(self):
+        repr=""
+        for y in range(self.numRows):
+            
+            for x in range(self.numCols):
+                repr+="{:<15}".format(str(self.grid[x+y*self.numCols])[:15])+"|"
+            repr+="\n"
+        return repr
+
+            
