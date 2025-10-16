@@ -1,25 +1,18 @@
-from RevisedMicroGame.gameHandler import GameHandler
-from RevisedMicroGame.taskManager import ScriptScheduler
-from RevisedMicroGame.tileManager import GridTileManager
-from RevisedMicroGame.coordinateSystem import VectorMapFactory
-from RevisedMicroGame.displayDrivers import WaveShareDisplay
-from RevisedMicroGame.gameObject import GameObject
-from RevisedMicroGame.drawable import *
-from RevisedMicroGame.util import rgb
-from random import randint
-from time import ticks_ms,ticks_diff
-WIDTH=240
-HEIGHT=300
-vectorMap=VectorMapFactory(lambda x: x+WIDTH//2, lambda y: -y+HEIGHT//2)
-Game=GameHandler(ScriptScheduler(),GridTileManager(WaveShareDisplay(),2,4,1),vectorMap)
-GameObject.bind_game_handler(Game)
-for i in range(20):
-    rect=GameObject(Rectangle(0,0,40,40,rgb(34, 182, 59)))
-    rect.velocity.speed=40
-    rect.velocity.angle=-randint(0,360)
-    rect.velocity.speed=40
-while True:
-    start=ticks_ms()
-    Game.update()
-    elapsed=ticks_diff(ticks_ms(),start)
-    print(f"Frame took {elapsed/1000} s")
+from Rewrite3 import *
+from Rewrite3.tileManager import GridTileManager
+from Rewrite3.displayDrivers import WaveShareDisplay
+tileManager=GridTileManager(WaveShareDisplay(240,280),2,2)
+game=GameHandler(ScriptScheduler(),tileManager,VectorMapFactory(lambda x: x-3+240//2, lambda y: -y+280//2))
+GameObject.bind_game_handler(game)
+
+"""step_size=4
+for x in range(step_size+1):
+    for y in range(step_size+1):
+        xcor=x*240/step_size-120
+        ycor=150-y*300/step_size
+        GameObject(xcor,ycor,Rectangle(5,5,color=rgb(0, 195, 255)))
+        offset=20
+        if x%2:
+            offset*=-1
+        GameObject(xcor,ycor+offset,Text(f"{int(xcor)},{int(ycor)}",color=rgb(255, 0, 0)))
+        """

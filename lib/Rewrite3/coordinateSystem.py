@@ -12,20 +12,22 @@ class Vec2:
         
     # --- Properties ---
     @property
-    def x(self) -> int:
+    def x(self):
         return self._x # type: ignore
     @x.setter
     def x(self, value):
-        self._x= int(value)
-        if self.on_update: self.on_update()
+        if self._x!=value:
+            self._x= value
+            if self.on_update: self.on_update()
 
     @property
-    def y(self) -> int:
+    def y(self):
         return self._y # type: ignore
     @y.setter
     def y(self, value):
-        self._y= int(value)
-        if self.on_update: self.on_update()
+        if self._y!=value:
+            self._y=value
+            if self.on_update: self.on_update()
     
     def move(self,x,y):
         self.x=x
@@ -50,6 +52,9 @@ class Vec2:
         self.x = mag * math.cos(theta)
         self.y = mag * math.sin(theta)
     
+    def __iter__(self):
+        yield self.x
+        yield self.y
     @property
     def speed(self):
         return self.magnitude()
@@ -136,16 +141,18 @@ class Vec2:
         if DEBUG: print(f"[Vec2] Cloning {self}")
         return Vec2(self.x, self.y)
     
-    def toInt(self) -> tuple[int,int]:
-        return (int(self.x),int(self.y))
+    def toInt(self):
+        return Vec2(int(self.x),int(self.y))
     # --- Representation ---
     def __repr__(self):
         return f"(x={self.x:.3f}, y={self.y:.3f})"
     def min(self,vec:'Vec2'):
         return Vec2(min(vec.x,self.x),min(vec.y,self.y))
-    
     def max(self,vec:'Vec2'):
         return Vec2(max(vec.x,self.x),max(self.y,vec.y))
+    
+    def distance(self,vec:'Vec2'):
+        return (self-vec).magnitude()
 
 class VectorMapFactory:
     def __init__(self,x_map=lambda x:x,y_map=lambda y:y):
@@ -156,7 +163,11 @@ class VectorMapFactory:
     def map(self,vec:Vec2)->Vec2:
         if DEBUG: print(f"[VectorMapFactory] Mapping {vec}")
         return Vec2(self.x_map(vec.x),self.y_map(vec.y))
-    
+    def compose(self,vectorMap:'VectorMapFactory'):
+        return VectorMapFactory(
+            x_map=lambda x: self.x_map(vectorMap.x_map(x)),
+            y_map=lambda y: self.y_map(vectorMap.y_map(y))
+        )
+
     def __repr__(self):
         return f"VectorMapFactory(x_map={self.x_map}, y_map={self.y_map})"
-
